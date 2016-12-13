@@ -1,3 +1,4 @@
+// Edge Detection class
 class EdgeDetection {
   constructor(canvas) {
     this.canvas = canvas
@@ -125,8 +126,6 @@ class EdgeDetection {
 
   gaussian(sigma=1.4, size=5) { // gaussian filter
     const kernel = this.generateGaussianKernel(sigma, size)
-    // const imageData = this.convolve(kernel)
-    // this.context.putImageData(imageData, 0, 0)
 
     const magnitudes = this.magnitudes.slice(0)
     magnitudes.fill(0)
@@ -145,7 +144,6 @@ class EdgeDetection {
     })
 
     this.magnitudes = magnitudes
-    // this.drawMagnitudes()
   }
 
   generateGaussianKernel(sigma, size) {
@@ -173,15 +171,6 @@ class EdgeDetection {
     return kernel
   }
 
-  /**
-   sobel kernel
-    x:  [[-1, 0, 1],
-        [-2, 0, 2],
-        [-1, 0, 1]],
-    y:  [[-1, -2, -1],
-        [0, 0, 0],
-        [1, 2, 1]]
-   */
   convolve(kernel, opaque=false) {
     const side = kernel.length
     const halfSide = Math.floor(side / 2)// Math.round(side / 2)
@@ -233,12 +222,10 @@ class EdgeDetection {
 
   resetImage() {
     this.context.drawImage(this.image, 0, 0)
-
     this.magnitudes = []
   }
 
   createImageData() {
-
     return this.tmpContext.createImageData(this.canvas.width, this.canvas.height)
   }
 
@@ -247,24 +234,6 @@ class EdgeDetection {
   }
 
   operator(kernelX, kernelY) {
-    /*
-    const pixelX = this.convolve(kernelX)
-    const pixelY = this.convolve(kernelY)
-
-    this.magnitudes = []
-
-    const finalImage = this.createImageData()
-    for (let i = 0; i < finalImage.data.length; i+= 4) {
-      const magnitude = Math.sqrt(pixelX.data[i] * pixelX.data[i] + pixelY.data[i] * pixelY.data[i])
-      finalImage.data[i] = magnitude
-      finalImage.data[i+1] = magnitude
-      finalImage.data[i+2] = magnitude
-      finalImage.data[i+3] = 255; // opaque alpha
-
-      this.magnitudes.push(magnitude)
-
-    this.context.putImageData(finalImage, 0, 0)
-    */
     const magnitudes = this.magnitudes.slice(0)
     magnitudes.fill(0)
     const size = kernelX.length
@@ -282,7 +251,7 @@ class EdgeDetection {
     this.magnitudes = magnitudes
   }
 
-  drawMagnitudes() {
+  drawOnCanvas() {
     const finalImage = this.createImageData()
     for (let i = 0; i < this.magnitudes.length; i++) {
       const n = i * 4, magnitude = this.magnitudes[i]
@@ -338,6 +307,7 @@ class EdgeDetection {
     )
   }
 
+  // check http://stackoverflow.com/questions/13659517/non-max-suppression
   nonMaximumSuppression() {
     if (!this.magnitudes.length) return
     const magnitudes = this.magnitudes.slice(0)
@@ -368,7 +338,7 @@ class EdgeDetection {
       }
     })
     this.magnitudes = magnitudes
-    this.drawMagnitudes()
+    this.drawOnCanvas()
   }
 
   // low threshold, and high threshold
@@ -415,6 +385,6 @@ class EdgeDetection {
       }
     })
 
-    this.drawMagnitudes()
+    this.drawOnCanvas()
   }
 }

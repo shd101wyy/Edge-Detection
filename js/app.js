@@ -1,19 +1,14 @@
 (function() {
   const edgeDetection = new EdgeDetection(document.getElementById('image-canvas'))
 
-  edgeDetection.loadImage('images/IMG4622.jpg')
+  // edgeDetection.loadImage('images/IMG4622.jpg')
   // edgeDetection.loadImage('images/fruits.jpg')
-  // edgeDetection.loadImage('images/anime.jpg')
+  edgeDetection.loadImage('images/anime.jpg')
 
 
   document.getElementById('greyscale').addEventListener('click', function() {
     edgeDetection.greyscale()
   })
-
-  /*
-  document.getElementById('gaussian-blur').addEventListener('click', function() {
-    edgeDetection.gaussian()
-  })*/
 
   document.getElementById('reset').addEventListener('click', function() {
     edgeDetection.resetImage()
@@ -26,23 +21,6 @@
   document.getElementById('invert').addEventListener('click', function() {
     edgeDetection.invert()
   })
-  /*
-  document.getElementById('sobel').addEventListener('click', function() {
-    edgeDetection.sobel()
-  })
-
-  document.getElementById('roberts').addEventListener('click', function() {
-    edgeDetection.roberts()
-  })
-
-  document.getElementById('prewitt').addEventListener('click', function() {
-    edgeDetection.prewitt()
-  })
-
-  document.getElementById('scharr').addEventListener('click', function() {
-    edgeDetection.scharr()
-  })
-  */
 
   const imageLoader = document.getElementById('image-loader')
   imageLoader.addEventListener('change', handleImage, false)
@@ -71,22 +49,10 @@
     link.click()
   })
 
-  /*
-  document.getElementById('non-maximum-suppression').addEventListener('click', function() {
-    edgeDetection.nonMaximumSuppression()
-  })
-
-  document.getElementById('hysteresis').addEventListener('click', function() {
-    edgeDetection.hysteresis()
-  })
-  */
-
-  const detectEdgeBtn = document.getElementById('detect-edge')
-  detectEdgeBtn.addEventListener('click', function() {
-    if (detectEdgeBtn.classList.contains('running')) return
-    detectEdgeBtn.classList.add('running')
+  function beforeNonMaximumSuppression() {
     edgeDetection.resetImage()
 
+    // greyscale
     edgeDetection.greyscale()
 
     // gaussian blur
@@ -94,7 +60,6 @@
     const size = parseInt(document.getElementById('kernel-size').value) || 5
 
     edgeDetection.gaussian(sigma, size)
-
 
     // calulcate gradiant
     if (document.getElementById('sobel').checked) {
@@ -106,6 +71,21 @@
     } else if (document.getElementById('scharr').checked) {
       edgeDetection.scharr()
     }
+
+    edgeDetection.drawOnCanvas()
+  }
+
+  document.getElementById('calculate-gradiant').addEventListener('click', function() {
+    beforeNonMaximumSuppression()
+  })
+
+  const detectEdgeBtn = document.getElementById('detect-edge')
+  detectEdgeBtn.addEventListener('click', function() {
+    if (detectEdgeBtn.classList.contains('running')) return
+    detectEdgeBtn.classList.add('running')
+
+    // before non-maximum-suppression
+    beforeNonMaximumSuppression()
 
     // non-maximum-suppression
     edgeDetection.nonMaximumSuppression()

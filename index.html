@@ -18,6 +18,11 @@
     box-sizing: border-box;
   }
 
+  .clearfix {
+    overflow: auto;
+    zoom: 1;
+  }
+
   #app {
     margin: o auto;
     max-width: 100%;
@@ -168,12 +173,13 @@
     </div>
 
     <p class="small-header"> Operators </p>
-    <div class="operators section">
+    <div class="operators section clearfix">
       <div class="radio-div"><input id="sobel" type="radio" name="operator" checked> Sobel </div>
       <div class="radio-div"><input id="roberts" type="radio" name="operator"> Roberts </div>
       <div class="radio-div"><input id="prewitt" type="radio" name="operator"> Prewitt </div>
       <div class="radio-div"><input id="scharr" type="radio" name="operator"> Scharr</div>
     </div>
+    <button class="btn" id="calculate-gradiant"> Apply operator </button>
 
     <p class="small-header" style="margin-top: 32px;"> Non-maximum Suppression & Hysteresis </p>
     <div class="input-div">
