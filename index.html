@@ -24,16 +24,22 @@
   }
 
   #app {
-    margin: o auto;
+    position: relative;
     max-width: 100%;
-    width: 1024px;
+    width: 100%;
     padding: 24px;
   }
 
+  #panel {
+    float: left;
+    width: 400px;
+  }
   #image-canvas {
-    margin: 0 auto;
-    margin-bottom: 24px;
-    max-width: calc(100% - 48px);
+    float: left;
+    max-width: calc(100% - 460px);
+    left: 460px;
+    position: absolute;
+    top: 60px;
   }
 
   .btn {
@@ -137,9 +143,8 @@
 
 </style>
 <body>
-  <div id="app">
-    <canvas id="image-canvas"></canvas><br>
-
+  <div id="app" class="clearfix">
+    <div id="panel">
     <input type="file" id="image-loader" name="imageLoader" style="display:none;" />
     <a id="download-link" style="display:none;"></a>
     <br>
@@ -192,7 +197,9 @@
     </div>
 
     <button class="btn detect-edge" id="detect-edge"> </button>
+    </div>
   </div>
+  <canvas id="image-canvas"></canvas>
 </body>
 <script src="js/edge_detection.js"></script>
 <script src="js/app.js"></script>
