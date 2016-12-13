@@ -159,7 +159,7 @@
       <p class="small-header"> Gaussian Blur</p>
       <div class="input-div">
         Sigma (> 0.0)
-        <input id="sigma" type="text" placeholder="0.7" />
+        <input id="sigma" type="text" placeholder="1.4" />
       </div>
       <div class="input-div">
         Kernal Size
@@ -178,16 +178,14 @@
     <p class="small-header" style="margin-top: 32px;"> Non-maximum Suppression & Hysteresis </p>
     <div class="input-div">
       Low threshold (0 ~ 255)
-      <input id="low-threshold" type="text" placeholder="100" />
+      <input id="low-threshold" type="text" placeholder="50" />
     </div>
     <div class="input-div">
       High threshold (0 ~ 255)
-      <input id="high-threshold" type="text" placeholder="150" />
+      <input id="high-threshold" type="text" placeholder="100" />
     </div>
 
     <button class="btn detect-edge" id="detect-edge"> </button>
-    <button class="btn light-green" id="reset2"> Reset </button>
-
   </div>
 </body>
 <script src="js/edge_detection.js"></script>

@@ -1,9 +1,9 @@
 (function() {
   const edgeDetection = new EdgeDetection(document.getElementById('image-canvas'))
 
-  // edgeDetection.loadImage('images/IMG4622.jpg')
+  edgeDetection.loadImage('images/IMG4622.jpg')
   // edgeDetection.loadImage('images/fruits.jpg')
-  edgeDetection.loadImage('images/anime.jpg')
+  // edgeDetection.loadImage('images/anime.jpg')
 
 
   document.getElementById('greyscale').addEventListener('click', function() {
@@ -16,10 +16,6 @@
   })*/
 
   document.getElementById('reset').addEventListener('click', function() {
-    edgeDetection.resetImage()
-  })
-
-  document.getElementById('reset2').addEventListener('click', function() {
     edgeDetection.resetImage()
   })
 
@@ -89,15 +85,16 @@
   detectEdgeBtn.addEventListener('click', function() {
     if (detectEdgeBtn.classList.contains('running')) return
     detectEdgeBtn.classList.add('running')
-    // edgeDetection.resetImage()
+    edgeDetection.resetImage()
 
     edgeDetection.greyscale()
 
     // gaussian blur
-    const sigma = parseFloat(document.getElementById('sigma').value) || 0.7
+    const sigma = parseFloat(document.getElementById('sigma').value) || 1.4
     const size = parseInt(document.getElementById('kernel-size').value) || 5
 
     edgeDetection.gaussian(sigma, size)
+
 
     // calulcate gradiant
     if (document.getElementById('sobel').checked) {
@@ -114,10 +111,11 @@
     edgeDetection.nonMaximumSuppression()
 
     // hysteresis
-    const lt = parseInt(document.getElementById('low-threshold').value) || 100
-    const ht = parseInt(document.getElementById('high-threshold').value) || 150
+    const lt = parseInt(document.getElementById('low-threshold').value) || 50
+    const ht = parseInt(document.getElementById('high-threshold').value) || 100
     edgeDetection.hysteresis(lt, ht)
 
+    console.log('done running')
     detectEdgeBtn.classList.remove('running')
   })
 })()

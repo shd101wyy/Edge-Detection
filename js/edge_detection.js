@@ -77,16 +77,20 @@ class EdgeDetection {
     const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height),
           data = imageData.data
 
+    this.magnitudes = []
     for (let i = 0; i < data.length; i+= 4) { // r,g,b,a
       const r = data[i],
             g = data[i + 1],
             b = data[i + 2]
       // const luminosity = 0.21*r + 0.72*g + 0.07*b
-      const luminosity = 0.2126*r + 0.7152*g + 0.0722*b;
+      // const luminosity = 0.2126*r + 0.7152*g + 0.0722*b;
+      const luminosity =  Math.round(0.298*r + 0.586*g + 0.114*b)
 
       data[i] = luminosity
       data[i + 1] = luminosity
       data[i + 2] = luminosity
+
+      this.magnitudes.push(luminosity)
     }
 
     // ovewrite old imageData
@@ -119,32 +123,51 @@ class EdgeDetection {
     this.context.putImageData(imageData, 0, 0)
   }
 
-  gaussian(sigma=0.7, size=5) { // gaussian filter
+  gaussian(sigma=1.4, size=5) { // gaussian filter
     const kernel = this.generateGaussianKernel(sigma, size)
-    const imageData = this.convolve(kernel)
-    this.context.putImageData(imageData, 0, 0)
+    // const imageData = this.convolve(kernel)
+    // this.context.putImageData(imageData, 0, 0)
+
+    const magnitudes = this.magnitudes.slice(0)
+    magnitudes.fill(0)
+
+    this.eachPixel(size, (x, y, current, neighbors)=> {
+      let i = 0
+      while (i < size) {
+        let j = 0
+        while (j < size) {
+          const pixelOffset = this.toPixelOffset(x, y)
+          magnitudes[pixelOffset] += neighbors[i][j] * kernel[i][j]
+          j++
+        }
+        i++
+      }
+    })
+
+    this.magnitudes = magnitudes
+    // this.drawMagnitudes()
   }
 
   generateGaussianKernel(sigma, size) {
     // this function is referred and modified from
-    // https://github.com/cmisenas/canny-edge-detection/blob/master/js/filters.js
-
-    const kernel = []
-    const E = 2.718 //Euler's number rounded of to 3 places
+    const s = sigma
+    const e = 2.718
+    const kernel = this.generateMatrix(size, size, 0)
     let sum = 0
-    for (let y = -(size - 1)/2, i = 0; i < size; y++, i++) {
-      kernel[i] = [];
-      for (let x = -(size - 1)/2, j = 0; j < size; x++, j++) {
-        // create kernel round to 3 decimal places
-        kernel[i][j] = 1/(2 * Math.PI * Math.pow(sigma, 2)) * Math.pow(E, -(Math.pow(Math.abs(x), 2) + Math.pow(Math.abs(y), 2))/(2 * Math.pow(sigma, 2)))
-        sum += kernel[i][j]
+    for (let i = 0; i < size; i++) {
+      const x = -(size-1)/2 + i // calculate the local x coordinate of neighbor
+      for (let j = 0; j < size; j++) {
+        const y = -(size-1)/2 + j // calculate the local y coordinate of neighbor
+        const gaussian = (1/(2*Math.PI*s*s)) * Math.pow(e, -(x*x+y*y)/(2*s*s))
+        kernel[i][j] = gaussian
+        sum += gaussian
       }
     }
-    //normalize the kernel to make its sum 1
-    const normalize = 1/sum
-    for (let k = 0; k < kernel.length; k++) {
-      for (let l = 0; l < kernel[k].length; l++) {
-        kernel[k][l] = Math.round(normalize * kernel[k][l] * 1000)/1000
+    // normalization
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        kernel[i][j] = (kernel[i][j]/sum).toFixed(3)
+
       }
     }
     return kernel
@@ -224,6 +247,7 @@ class EdgeDetection {
   }
 
   operator(kernelX, kernelY) {
+    /*
     const pixelX = this.convolve(kernelX)
     const pixelY = this.convolve(kernelY)
 
@@ -239,20 +263,23 @@ class EdgeDetection {
 
       this.magnitudes.push(magnitude)
 
-      /*
-      // make the pixelX gradient red
-      const v = Math.abs(pixelX.data[i]);
-      finalImage.data[i] = v;
-      // make the pixelY gradient green
-      const h = Math.abs(pixelY.data[i]);
-      finalImage.data[i+1] = h;
-      // and mix in some blue for aesthetics
-      finalImage.data[i+2] = (v+h)/4;
-      finalImage.data[i+3] = 255; // opaque alpha
-      */
-    }
-
     this.context.putImageData(finalImage, 0, 0)
+    */
+    const magnitudes = this.magnitudes.slice(0)
+    magnitudes.fill(0)
+    const size = kernelX.length
+    this.eachPixel(size, (x, y, current, neighbors)=> {
+      let ghs = 0
+      let gvs = 0
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          ghs += kernelX[i][j]*neighbors[i][j]
+          gvs += kernelY[i][j]*neighbors[i][j]
+        }
+      }
+      magnitudes[this.toPixelOffset(x, y)] = Math.sqrt(ghs*ghs+gvs*gvs)
+    })
+    this.magnitudes = magnitudes
   }
 
   drawMagnitudes() {
@@ -345,7 +372,7 @@ class EdgeDetection {
   }
 
   // low threshold, and high threshold
-  hysteresis(lt=100, ht=150) {
+  hysteresis(lt=50, ht=100) {
     const isStrong = (edge)=> edge > ht
     const isCandidate = (edge)=> edge <= ht && edge >= lt
     const isWeak = (edge)=> edge < lt
