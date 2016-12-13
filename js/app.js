@@ -60,4 +60,13 @@
     imageLoader.click()
   })
 
+  document.getElementById('save-image').addEventListener('click', function() {
+    const canvas = document.getElementById('image-canvas')
+    // window.open(canvas.toDataURL('image/png'))
+    const link = document.getElementById('download-link')
+    link.href = canvas.toDataURL();
+    link.download = Math.random().toString(36).substr(2, 9) + '.png';
+    link.click()
+  })
+
 })()

@@ -69,7 +69,7 @@
 
   .top-group, .operators, .filters {
     display: block;
-    margin-bottom: 16px;
+    margin-bottom: 6px;
   }
 
   .btn:hover {
@@ -91,12 +91,14 @@
     <canvas id="image-canvas"></canvas><br>
 
     <input type="file" id="image-loader" name="imageLoader" style="display:none;" />
+    <a id="download-link" style="display:none;"></a>
     <br>
 
     <div class="top-group">
       <p class="header"> CS519 Final Project: Edge Detection</p>
       <button class="btn blue" id="upload-image"> Upload image </button>
       <button class="btn light-green" id="reset"> Reset </button>
+      <button class="btn" id="save-image">Save image</button>
     </div>
 
     <div class="filters">
