@@ -119,7 +119,7 @@ class EdgeDetection {
     this.context.putImageData(imageData, 0, 0)
   }
 
-  gaussian(sigma=1.4, size=5) { // gaussian filter
+  gaussian(sigma=0.7, size=5) { // gaussian filter
     const kernel = this.generateGaussianKernel(sigma, size)
     const imageData = this.convolve(kernel)
     this.context.putImageData(imageData, 0, 0)

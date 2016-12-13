@@ -3,18 +3,23 @@
 
   // edgeDetection.loadImage('images/IMG4622.jpg')
   // edgeDetection.loadImage('images/fruits.jpg')
-  edgeDetection.loadImage('images/solar_system.jpg')
+  edgeDetection.loadImage('images/anime.jpg')
 
 
   document.getElementById('greyscale').addEventListener('click', function() {
     edgeDetection.greyscale()
   })
 
+  /*
   document.getElementById('gaussian-blur').addEventListener('click', function() {
     edgeDetection.gaussian()
-  })
+  })*/
 
   document.getElementById('reset').addEventListener('click', function() {
+    edgeDetection.resetImage()
+  })
+
+  document.getElementById('reset2').addEventListener('click', function() {
     edgeDetection.resetImage()
   })
 
@@ -25,7 +30,7 @@
   document.getElementById('invert').addEventListener('click', function() {
     edgeDetection.invert()
   })
-
+  /*
   document.getElementById('sobel').addEventListener('click', function() {
     edgeDetection.sobel()
   })
@@ -41,6 +46,7 @@
   document.getElementById('scharr').addEventListener('click', function() {
     edgeDetection.scharr()
   })
+  */
 
   const imageLoader = document.getElementById('image-loader')
   imageLoader.addEventListener('change', handleImage, false)
@@ -69,6 +75,7 @@
     link.click()
   })
 
+  /*
   document.getElementById('non-maximum-suppression').addEventListener('click', function() {
     edgeDetection.nonMaximumSuppression()
   })
@@ -76,5 +83,41 @@
   document.getElementById('hysteresis').addEventListener('click', function() {
     edgeDetection.hysteresis()
   })
+  */
 
+  const detectEdgeBtn = document.getElementById('detect-edge')
+  detectEdgeBtn.addEventListener('click', function() {
+    if (detectEdgeBtn.classList.contains('running')) return
+    detectEdgeBtn.classList.add('running')
+    // edgeDetection.resetImage()
+
+    edgeDetection.greyscale()
+
+    // gaussian blur
+    const sigma = parseFloat(document.getElementById('sigma').value) || 0.7
+    const size = parseInt(document.getElementById('kernel-size').value) || 5
+
+    edgeDetection.gaussian(sigma, size)
+
+    // calulcate gradiant
+    if (document.getElementById('sobel').checked) {
+      edgeDetection.sobel()
+    } else if (document.getElementById('roberts').checked) {
+      edgeDetection.roberts()
+    } else if (document.getElementById('prewitt').checked) {
+      edgeDetection.prewitt()
+    } else if (document.getElementById('scharr').checked) {
+      edgeDetection.scharr()
+    }
+
+    // non-maximum-suppression
+    edgeDetection.nonMaximumSuppression()
+
+    // hysteresis
+    const lt = parseInt(document.getElementById('low-threshold').value) || 100
+    const ht = parseInt(document.getElementById('high-threshold').value) || 150
+    edgeDetection.hysteresis(lt, ht)
+
+    detectEdgeBtn.classList.remove('running')
+  })
 })()

@@ -6,7 +6,7 @@
 <style>
   html, body {
     font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif;
-    font-size: 16px;
+    font-size: 12px;
     line-height: 1.6;
     margin: 0;
     padding: 0;
@@ -26,7 +26,6 @@
   }
 
   #image-canvas {
-    width: 100%;
     margin: 0 auto;
     margin-bottom: 24px;
     max-width: calc(100% - 48px);
@@ -67,7 +66,24 @@
     background-color: #7ea650;
   }
 
-  .top-group, .operators, .filters {
+  .detect-edge {
+    background-color: #555555;
+    color: #fff;
+  }
+
+  .detect-edge::before {
+    content: "Detect Edge";
+  }
+
+  .detect-edge.running::before {
+    content: "Running";
+  }
+
+  .detect-edge:hover {
+    background-color: #636363;
+  }
+
+  .section {
     display: block;
     margin-bottom: 6px;
   }
@@ -83,6 +99,35 @@
   .header {
     margin: 0;
     font-weight: 600;
+    font-size: 16px;
+  }
+
+  .section-header {
+    margin: 0;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .small-header {
+    margin-top: 8px;
+    color: #03A9F4;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .input-div {
+    margin-bottom: 4px;
+  }
+
+  .input-div input[type="text"] {
+    left: 200px;
+    position: absolute;
+  }
+
+  .radio-div {
+    float: left;
+    margin-left: 8px;
   }
 
 </style>
@@ -101,31 +146,48 @@
       <button class="btn" id="save-image">Save image</button>
     </div>
 
-    <div class="filters">
-      <p> Filters </p>
+    <div class="basic-filters section">
+      <p class="section-header"> Basic Filters </p>
       <button class="btn" id="greyscale"> Greyscale </button>
-      <button class="btn" id="gaussian-blur">Gaussian blur</button>
       <button class="btn" id="sharpen">Sharpen</button>
       <button class="btn" id="invert"> Invert </button>
     </div>
 
-    <div class="operators">
-      <p> Operators </p>
-      <button class="btn" id="sobel"> Sobel </button>
-      <button class="btn" id="roberts"> Roberts </button>
-      <button class="btn" id="prewitt"> Prewitt </button>
-      <button class="btn" id="scharr"> Scharr </button>
+    <div class="edge-detection section">
+      <p class="section-header"> Edge Detection </p>
+
+      <p class="small-header"> Gaussian Blur</p>
+      <div class="input-div">
+        Sigma (> 0.0)
+        <input id="sigma" type="text" placeholder="0.7" />
+      </div>
+      <div class="input-div">
+        Kernal Size
+        <input id="kernel-size" type="text" placeholder="5" />
+      </div>
     </div>
 
-    <div class="edge-thining">
-      <p>Edge thining</p>
-      <button class="btn" id="non-maximum-suppression">Non-maximum Suppression</button>
+    <p class="small-header"> Operators </p>
+    <div class="operators section">
+      <div class="radio-div"><input id="sobel" type="radio" name="operator" checked> Sobel </div>
+      <div class="radio-div"><input id="roberts" type="radio" name="operator"> Roberts </div>
+      <div class="radio-div"><input id="prewitt" type="radio" name="operator"> Prewitt </div>
+      <div class="radio-div"><input id="scharr" type="radio" name="operator"> Scharr</div>
     </div>
 
-    <div class="edge-prunning">
-      <p> Edge prunning </p>
-      <button class="btn" id="hysteresis"> Hysteresis </button>
+    <p class="small-header" style="margin-top: 32px;"> Non-maximum Suppression & Hysteresis </p>
+    <div class="input-div">
+      Low threshold (0 ~ 255)
+      <input id="low-threshold" type="text" placeholder="100" />
     </div>
+    <div class="input-div">
+      High threshold (0 ~ 255)
+      <input id="high-threshold" type="text" placeholder="150" />
+    </div>
+
+    <button class="btn detect-edge" id="detect-edge"> </button>
+    <button class="btn light-green" id="reset2"> Reset </button>
+
   </div>
 </body>
 <script src="js/edge_detection.js"></script>
