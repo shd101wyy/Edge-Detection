@@ -12,6 +12,7 @@ class EdgeDetection {
     this.image = new Image()
     this.image.src = src
     this.image.onload = this.drawImage.bind(this)
+    this.image.crossOrigin = 'anonymous';
   }
 
   drawImage() {
@@ -57,7 +58,7 @@ class EdgeDetection {
     const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height),
           data = imageData.data
 
-    for (let i = 0; i < data.length; i+= 4) { // r,g,b,a
+    for (let i = 0; i < data.length; i += 4) { // r,g,b,a
       const r = 255 - data[i],
             g = 255 - data[i + 1],
             b = 255 - data[i + 2]
@@ -71,11 +72,19 @@ class EdgeDetection {
     this.context.putImageData(imageData, 0, 0)
   }
 
+  sharpen() {
+    this.resetImage()
+    const kernel = [[0, -1, 0],
+                    [-1, 5, -1],
+                    [0, -1, 0]]
+    const imageData = this.convolve(kernel)
+    this.context.putImageData(imageData, 0, 0)
+  }
+
   gaussian(sigma=0.7, size=5) { // gaussian filter
     const kernel = this.generateGaussianKernel(sigma, size)
     const imageData = this.convolve(kernel)
     this.context.putImageData(imageData, 0, 0)
-    window.imageData = imageData
   }
 
   generateGaussianKernel(sigma, size) {
@@ -110,7 +119,7 @@ class EdgeDetection {
    */
   convolve(kernel, opaque=false) {
     const side = kernel.length
-    const halfSide = Math.round(side / 2)
+    const halfSide = Math.floor(side / 2)// Math.round(side / 2)
     const pixels = this.getPixels()
     const src = pixels.data,
           sw = pixels.width,
@@ -119,7 +128,7 @@ class EdgeDetection {
     const w = sw,
           h = sh
 
-    const output = this.createImageData(w, h)
+    const output = this.createImageData()
     const dst = output.data
 
     const alphaFactor = opaque ? 1 : 0
@@ -128,7 +137,7 @@ class EdgeDetection {
       for (let x = 0; x < w; x++) {
         const sy = y
         const sx = x
-        const distOffet = (y*w+x)*4
+        const dstOffset = (y*w+x)*4
         // calculate the weighed sum of the source image pixels that
         // fall under the convolution matrix
         let r = 0, g = 0, b = 0, a = 0
@@ -147,10 +156,10 @@ class EdgeDetection {
             }
           }
         }
-        dst[distOffet] = r
-        dst[distOffet+1] = g
-        dst[distOffet+2] = b
-        dst[distOffet+3] = a + alphaFactor*(255-a)
+        dst[dstOffset] = r
+        dst[dstOffset+1] = g
+        dst[dstOffset+2] = b
+        dst[dstOffset+3] = a + alphaFactor*(255-a)
       }
     }
     return output
@@ -160,20 +169,82 @@ class EdgeDetection {
     this.context.drawImage(this.image, 0, 0)
   }
 
-  createImageData(width, height) {
-    return this.tmpContext.createImageData(width, height)
+  createImageData() {
+
+    return this.tmpContext.createImageData(this.canvas.width, this.canvas.height)
   }
 
   getPixels() {
     return this.context.getImageData(0, 0, this.canvas.width, this.canvas.height)
   }
+
+  operator(kernelX, kernelY) {
+    const pixelX = this.convolve(kernelX)
+    const pixelY = this.convolve(kernelY)
+
+    const finalImage = this.createImageData()
+    for (let i = 0; i < finalImage.data.length; i+= 4) {
+      const magnitude = Math.sqrt(pixelX.data[i] * pixelX.data[i] + pixelY.data[i] * pixelY.data[i])
+      finalImage.data[i] = magnitude
+      finalImage.data[i+1] = magnitude
+      finalImage.data[i+2] = magnitude
+      finalImage.data[i+3] = 255; // opaque alpha
+
+      /*
+      // make the pixelX gradient red
+      const v = Math.abs(pixelX.data[i]);
+      finalImage.data[i] = v;
+      // make the pixelY gradient green
+      const h = Math.abs(pixelY.data[i]);
+      finalImage.data[i+1] = h;
+      // and mix in some blue for aesthetics
+      finalImage.data[i+2] = (v+h)/4;
+      finalImage.data[i+3] = 255; // opaque alpha
+      */
+    }
+
+    this.context.putImageData(finalImage, 0, 0)
+  }
+
+  sobel() {
+    return this.operator(
+      [[-1, 0, 1],
+        [-2, 0, 2],
+        [-1, 0, 1]],
+
+      [[-1, -2, -1],
+        [0,  0,  0],
+        [1,  2,  1]]
+    )
+  }
+
+  roberts() {
+    return this.operator(
+      [[1, 0],
+       [0, -1]],
+      [[0, 1],
+       [-1, 0]]
+    )
+  }
+
+  prewitt() {
+    return this.operator(
+      [[-1, 0, 1],
+       [-1, 0, 1],
+       [-1, 0, 1]],
+      [[-1, -1, -1],
+       [0, 0, 0],
+       [1, 1, 1]]
+    )
+  }
+
 }
 
 (function() {
   const edgeDetection = new EdgeDetection(document.getElementById('image-canvas'))
 
   edgeDetection.loadImage('images/IMG4622.jpg')
-  window.edgeDetection = edgeDetection
+  // edgeDetection.loadImage('images/demo_small.png')
 
   document.getElementById('greyscale').addEventListener('click', function() {
     edgeDetection.greyscale()
@@ -185,5 +256,25 @@ class EdgeDetection {
 
   document.getElementById('reset').addEventListener('click', function() {
     edgeDetection.resetImage()
+  })
+
+  document.getElementById('sharpen').addEventListener('click', function() {
+    edgeDetection.sharpen()
+  })
+
+  document.getElementById('invert').addEventListener('click', function() {
+    edgeDetection.invert()
+  })
+
+  document.getElementById('sobel').addEventListener('click', function() {
+    edgeDetection.sobel()
+  })
+
+  document.getElementById('roberts').addEventListener('click', function() {
+    edgeDetection.roberts()
+  })
+
+  document.getElementById('prewitt').addEventListener('click', function() {
+    edgeDetection.prewitt()
   })
 })()
