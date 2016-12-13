@@ -73,7 +73,6 @@ class EdgeDetection {
   }
 
   sharpen() {
-    this.resetImage()
     const kernel = [[0, -1, 0],
                     [-1, 5, -1],
                     [0, -1, 0]]
@@ -88,22 +87,26 @@ class EdgeDetection {
   }
 
   generateGaussianKernel(sigma, size) {
-    const k = (size - 1)/2;
-    const kernel = [];
-    const rhoSq = Math.pow(sigma, 2)
+    // this function is referred and modified from
+    // https://github.com/cmisenas/canny-edge-detection/blob/master/js/filters.js
 
-    // generate nxn kernel
-    for(let i = 0; i < size; i++){
-        const krow = [];
-        for(let j = 0; j < size; j++){
-            // Gaussian formula
-            const H = 1 / (2 * Math.PI * rhoSq) *
-                        Math.exp(
-                            (-1 / (2 * rhoSq)) *
-                            (Math.pow(i - k - 1, 2) + Math.pow(j - k - 1, 2)));
-            krow.push(H);
-        }
-        kernel.push(krow);
+    const kernel = []
+    const E = 2.718 //Euler's number rounded of to 3 places
+    let sum = 0
+    for (let y = -(size - 1)/2, i = 0; i < size; y++, i++) {
+      kernel[i] = [];
+      for (let x = -(size - 1)/2, j = 0; j < size; x++, j++) {
+        // create kernel round to 3 decimal places
+        kernel[i][j] = 1/(2 * Math.PI * Math.pow(sigma, 2)) * Math.pow(E, -(Math.pow(Math.abs(x), 2) + Math.pow(Math.abs(y), 2))/(2 * Math.pow(sigma, 2)))
+        sum += kernel[i][j]
+      }
+    }
+    //normalize the kernel to make its sum 1
+    const normalize = 1/sum
+    for (let k = 0; k < kernel.length; k++) {
+      for (let l = 0; l < kernel[k].length; l++) {
+        kernel[k][l] = Math.round(normalize * kernel[k][l] * 1000)/1000
+      }
     }
     return kernel
   }
@@ -156,6 +159,7 @@ class EdgeDetection {
             }
           }
         }
+
         dst[dstOffset] = r
         dst[dstOffset+1] = g
         dst[dstOffset+2] = b
@@ -232,9 +236,21 @@ class EdgeDetection {
       [[-1, 0, 1],
        [-1, 0, 1],
        [-1, 0, 1]],
-      [[-1, -1, -1],
+      [[1, 1, 1],
        [0, 0, 0],
-       [1, 1, 1]]
+       [-1, -1, -1]]
+    )
+  }
+
+  scharr() {
+    return this.operator(
+      [[3, 10, 3],
+       [0, 0, 0],
+       [-3, -10, -3]],
+
+      [[3, 0, -3],
+       [10, 0, -10],
+       [3,  0,  -3]]
     )
   }
 
@@ -243,8 +259,8 @@ class EdgeDetection {
 (function() {
   const edgeDetection = new EdgeDetection(document.getElementById('image-canvas'))
 
-  edgeDetection.loadImage('images/IMG4622.jpg')
-  // edgeDetection.loadImage('images/demo_small.png')
+  // edgeDetection.loadImage('images/IMG4622.jpg')
+  edgeDetection.loadImage('images/demo_small.png')
 
   document.getElementById('greyscale').addEventListener('click', function() {
     edgeDetection.greyscale()
@@ -276,5 +292,9 @@ class EdgeDetection {
 
   document.getElementById('prewitt').addEventListener('click', function() {
     edgeDetection.prewitt()
+  })
+
+  document.getElementById('scharr').addEventListener('click', function() {
+    edgeDetection.scharr()
   })
 })()
