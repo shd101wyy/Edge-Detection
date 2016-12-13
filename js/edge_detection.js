@@ -5,6 +5,8 @@ class EdgeDetection {
 
     this.tmpCanvas = document.createElement('canvas')
     this.tmpContext = this.tmpCanvas.getContext('2d')
+
+    this.magnitudes = []
   }
 
   loadImage(src) {
@@ -23,6 +25,52 @@ class EdgeDetection {
     this.canvas.height = height
 
     this.context.drawImage(this.image, 0, 0)
+  }
+
+  generateMatrix(width, height, initialValue) {
+    const matrix = []
+    for (let i = 0; i < height; i++) {
+      matrix.push([])
+      for (let j = 0; j < width; j++) {
+        matrix[i].push(initialValue)
+      }
+    }
+    return matrix
+  }
+
+  getNeighorMagnitudes(x, y, size) {
+    const neighbors = this.generateMatrix(size, size, 0)
+    const halfSize = Math.floor(size / 2)
+    for (let j = 0; j < size; j++) {
+      // neighbors[i] = []
+      for (let i = 0; i < size; i++) {
+        const trnsX = x - halfSize + i
+        const trnsY = y - halfSize + j
+        const pixelOffset = this.toPixelOffset(trnsX, trnsY)
+        if (this.magnitudes[pixelOffset]) {
+          neighbors[j][i] = this.magnitudes[pixelOffset]
+        } else {
+          neighbors[j][i] = 0
+        }
+      }
+    }
+    return neighbors
+  }
+
+  toPixelOffset(x, y) {
+    return (y * this.canvas.width + x)
+  }
+
+  eachPixel(neighborSize, callback) { // (x, y, current, neighbors)
+    const width = this.canvas.width,
+          height = this.canvas.height
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const current = this.magnitudes[this.toPixelOffset(x, y)]
+        const neighbors = this.getNeighorMagnitudes(x, y, neighborSize)
+        callback(x, y, current, neighbors)
+      }
+    }
   }
 
   greyscale() {
@@ -71,7 +119,7 @@ class EdgeDetection {
     this.context.putImageData(imageData, 0, 0)
   }
 
-  gaussian(sigma=0.7, size=5) { // gaussian filter
+  gaussian(sigma=1.4, size=5) { // gaussian filter
     const kernel = this.generateGaussianKernel(sigma, size)
     const imageData = this.convolve(kernel)
     this.context.putImageData(imageData, 0, 0)
@@ -162,6 +210,8 @@ class EdgeDetection {
 
   resetImage() {
     this.context.drawImage(this.image, 0, 0)
+
+    this.magnitudes = []
   }
 
   createImageData() {
@@ -177,6 +227,8 @@ class EdgeDetection {
     const pixelX = this.convolve(kernelX)
     const pixelY = this.convolve(kernelY)
 
+    this.magnitudes = []
+
     const finalImage = this.createImageData()
     for (let i = 0; i < finalImage.data.length; i+= 4) {
       const magnitude = Math.sqrt(pixelX.data[i] * pixelX.data[i] + pixelY.data[i] * pixelY.data[i])
@@ -184,6 +236,8 @@ class EdgeDetection {
       finalImage.data[i+1] = magnitude
       finalImage.data[i+2] = magnitude
       finalImage.data[i+3] = 255; // opaque alpha
+
+      this.magnitudes.push(magnitude)
 
       /*
       // make the pixelX gradient red
@@ -198,6 +252,18 @@ class EdgeDetection {
       */
     }
 
+    this.context.putImageData(finalImage, 0, 0)
+  }
+
+  drawMagnitudes() {
+    const finalImage = this.createImageData()
+    for (let i = 0; i < this.magnitudes.length; i++) {
+      const n = i * 4, magnitude = this.magnitudes[i]
+      finalImage.data[n] = magnitude
+      finalImage.data[n+1] = magnitude
+      finalImage.data[n+2] = magnitude
+      finalImage.data[n+3] = 255; // opaque alpha
+    }
     this.context.putImageData(finalImage, 0, 0)
   }
 
@@ -243,5 +309,85 @@ class EdgeDetection {
        [10, 0, -10],
        [3,  0,  -3]]
     )
+  }
+
+  nonMaximumSuppression() {
+    if (!this.magnitudes.length) return
+    const magnitudes = this.magnitudes.slice(0)
+    this.eachPixel(3, (x, y, c, n)=> {
+      const pixelOffset = this.toPixelOffset(x, y)
+      if (n[1][1] > n[0][1] && n[1][1] > n[2][1]) {
+        magnitudes[pixelOffset] = n[1][1]
+      } else {
+        magnitudes[pixelOffset] = 0
+      }
+
+      if (n[1][1] > n[0][2] && n[1][1] > n[2][0]) {
+        magnitudes[pixelOffset] = n[1][1]
+      } else {
+        magnitudes[pixelOffset] = 0
+      }
+
+      if (n[1][1] > n[1][0] && n[1][1] > n[1][2]) {
+        magnitudes[pixelOffset] = n[1][1]
+      } else {
+        magnitudes[pixelOffset] = 0
+      }
+
+      if (n[1][1] > n[0][0] && n[1][1] > n[2][2]) {
+        magnitudes[pixelOffset] = n[1][1]
+      } else {
+        magnitudes[pixelOffset] = 0
+      }
+    })
+    this.magnitudes = magnitudes
+    this.drawMagnitudes()
+  }
+
+  // low threshold, and high threshold
+  hysteresis(lt=100, ht=150) {
+    const isStrong = (edge)=> edge > ht
+    const isCandidate = (edge)=> edge <= ht && edge >= lt
+    const isWeak = (edge)=> edge < lt
+
+    // discard weak edges, pick up strong ones
+    const magnitudes = this.magnitudes.slice(0)
+    this.eachPixel(3, (x, y, c, n)=> {
+      const pixelOffset = this.toPixelOffset(x, y)
+      if (isStrong(c)) {
+        magnitudes[pixelOffset] = 255
+      } else {
+        magnitudes[pixelOffset] = 0
+      }
+    })
+    this.magnitudes = magnitudes
+
+    // traverse over candidate edges connected to strong ones
+    const traverseEdge = (x, y)=> {
+      if (x === 0 || y === 0 || x === this.canvas.width - 1 || y === this.canvas.height - 1) return
+      const pixelOffset = this.toPixelOffset(x, y)
+      if (isStrong(magnitudes[pixelOffset])) {
+        const neighbors = this.getNeighorMagnitudes(x, y, 3)
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (isCandidate(neighbors[i][j])) {
+              magnitudes[this.toPixelOffset(x-1+i, y-1+j)] = 255
+              traverseEdge(x-1+i, y-1+j)
+            }
+          }
+        }
+      }
+    }
+
+    this.eachPixel(3, traverseEdge)
+
+    // discard others
+    this.eachPixel(1, (x, y, current)=> {
+      if (!isStrong(current)) {
+        magnitudes[this.toPixelOffset(x, y)] = 0
+      }
+    })
+
+    this.drawMagnitudes()
   }
 }

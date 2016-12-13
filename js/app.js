@@ -69,4 +69,12 @@
     link.click()
   })
 
+  document.getElementById('non-maximum-suppression').addEventListener('click', function() {
+    edgeDetection.nonMaximumSuppression()
+  })
+
+  document.getElementById('hysteresis').addEventListener('click', function() {
+    edgeDetection.hysteresis()
+  })
+
 })()

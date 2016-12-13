@@ -17,3 +17,4 @@ http-server
 * [convolution](http://www.phpied.com/canvas-pixels-2-convolution-matrix/)
 * [introduction of canny edge detection](https://medium.com/front-end-hacking/how-to-draw-in-javascript-c016787f1e4a#9ebe)
   * Gray Scale -> Gaussian Blur -> Canny Gradient ->Canny Non-maximum Suppression -> Canny Hysteresis -> Scanning
+* [canny edge detection code](https://github.com/yuta1984/CannyJS)
