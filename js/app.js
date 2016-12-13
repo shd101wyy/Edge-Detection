@@ -81,9 +81,6 @@
 
   const detectEdgeBtn = document.getElementById('detect-edge')
   detectEdgeBtn.addEventListener('click', function() {
-    if (detectEdgeBtn.classList.contains('running')) return
-    detectEdgeBtn.classList.add('running')
-
     // before non-maximum-suppression
     beforeNonMaximumSuppression()
 
@@ -94,8 +91,5 @@
     const lt = parseInt(document.getElementById('low-threshold').value) || 50
     const ht = parseInt(document.getElementById('high-threshold').value) || 100
     edgeDetection.hysteresis(lt, ht)
-
-    console.log('done running')
-    detectEdgeBtn.classList.remove('running')
   })
 })()
