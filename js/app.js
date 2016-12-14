@@ -1,9 +1,9 @@
 (function() {
   const edgeDetection = new EdgeDetection(document.getElementById('image-canvas'))
 
-  // edgeDetection.loadImage('images/IMG4622.jpg')
+  edgeDetection.loadImage('images/IMG4622.jpg')
   // edgeDetection.loadImage('images/fruits.jpg')
-  edgeDetection.loadImage('images/anime.jpg')
+  // edgeDetection.loadImage('images/anime.jpg')
 
 
   document.getElementById('greyscale').addEventListener('click', function() {
