@@ -1,11 +1,14 @@
-# Edge Detection
+# Edge Detection  
+Canny edge detection.   
+Demo can be found [here](https://rawgit.com/shd101wyy/Edge-Detection/master/index.html).
 
-## Installation
+## Install & Usage
 ```sh
 npm install -g http-server
 cd {project_folder}
 http-server
 ```
+You can also open `index.html` in browser directly, but it might cause `crossOrigin` error.
 
 ## References
 * [sobel](https://thiscouldbebetter.wordpress.com/2013/08/14/filtering-images-with-convolution-masks-in-javascript/)
