@@ -1,6 +1,6 @@
 # Edge Detection  
 Canny edge detection.   
-Demo can be found [here](https://rawgit.com/shd101wyy/Edge-Detection/master/index.html).
+Demo can be found [here](http://shd101wyy.github.io/edge-detection/).
 
 ## Install & Usage
 ```sh
